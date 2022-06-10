@@ -397,18 +397,48 @@ func articlesUpdateHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func articlesDeleteHandler(w http.ResponseWriter, r *http.Request) {
+
+	// 1. 获取 URL 参数
 	id := getRouteVariable("id", r)
+
+	// 2. 读取对应的文章数据
 	article, err := getArticleByID(id)
-	checkError(err)
-	n, err :=article.delete()
-	checkError(err)
-	fmt.Println(n)
-	if n < 0 {
-		fmt.Fprint(w, "删除失败")
-		return
+
+	// 3. 如果出现错误
+	if err != nil {
+		if err == sql.ErrNoRows {
+			// 3.1 数据未找到
+			w.WriteHeader(http.StatusNotFound)
+			fmt.Fprint(w, "404 文章未找到")
+		} else {
+			// 3.2 数据库错误
+			checkError(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			fmt.Fprint(w, "500 服务器内部错误")
+		}
+	} else {
+		// 4. 未出现错误，执行删除操作
+		rowsAffected, err := article.delete()
+
+		// 4.1 发生错误
+		if err != nil {
+			// 应该是 SQL 报错了
+			checkError(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			fmt.Fprint(w, "500 服务器内部错误")
+		} else {
+			// 4.2 未发生错误
+			if rowsAffected > 0 {
+				// 重定向到文章列表页
+				indexURL, _ := router.Get("articles.index").URL()
+				http.Redirect(w, r, indexURL.String(), http.StatusFound)
+			} else {
+				// Edge case
+				w.WriteHeader(http.StatusNotFound)
+				fmt.Fprint(w, "404 文章未找到")
+			}
+		}
 	}
-	indexURL, _ := router.Get("articles.index").URL()
-	http.Redirect(w, r, indexURL.String(), http.StatusFound)
 }
 
 func (a Article) delete()  (int64, error){
