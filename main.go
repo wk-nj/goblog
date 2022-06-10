@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"goblog/pkg/route"
 	"html/template"
 	"log"
 	"net/http"
@@ -27,7 +28,7 @@ type Article struct {
 	Title, Body string
 }
 
-var router = mux.NewRouter()
+var router *mux.Router
 var db *sql.DB
 
 func initDB() {
@@ -111,7 +112,7 @@ func articlesShowHandler(w http.ResponseWriter, r *http.Request) {
 		// 4. 读取成功，显示文章
 		tmpl, err := template.New("show.gohtml").
 			Funcs(template.FuncMap{
-				"RouteName2URL": RouteName2URL,
+				"RouteName2URL": route.Name2URL,
 				"Int64ToString": Int64ToString,
 			}).
 			ParseFiles("resources/views/articles/show.gohtml")
@@ -119,17 +120,6 @@ func articlesShowHandler(w http.ResponseWriter, r *http.Request) {
 		err = tmpl.Execute(w, article)
 		checkError(err)
 	}
-}
-
-// RouteName2URL 通过路由名称来获取 URL
-func RouteName2URL(routeName string, pairs ...string) string {
-	url, err := router.Get(routeName).URL(pairs...)
-	if err != nil {
-		checkError(err)
-		return ""
-	}
-
-	return url.String()
 }
 
 // Int64ToString 将 int64 转换为 string
@@ -459,6 +449,7 @@ func (a Article) delete()  (int64, error){
 func main() {
 	initDB()
 	createTables()
+	route.Initialize()
 	router.HandleFunc("/", homeHandler).Methods("GET").Name("home")
 	router.HandleFunc("/about", aboutHandler).Methods("GET").Name("about")
 
