@@ -7,6 +7,7 @@ import (
 
 // PagesController 处理静态页面
 type PagesController struct {
+
 }
 
 // Home 首页
