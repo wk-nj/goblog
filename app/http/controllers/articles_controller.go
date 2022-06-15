@@ -46,14 +46,17 @@ func (*ArticlesController) Show(w http.ResponseWriter, r *http.Request) {
 		}
 	} else {
 		// 4. 读取成功，显示文章
+		viewPath := "resources/views"
+		files, _ := filepath.Glob(viewPath + "/layouts/*.gohtml")
+		files = append(files, viewPath + "/articles/show.gohtml")
 		tmpl, err := template.New("show.gohtml").
 			Funcs(template.FuncMap{
 				"RouteName2URL": route.Name2URL,
 				"Uint64ToString": types.Uint64ToString,
 			}).
-			ParseFiles("resources/views/articles/show.gohtml")
+			ParseFiles(files...)
 		logger.LogError(err)
-		err = tmpl.Execute(w, a)
+		err = tmpl.ExecuteTemplate(w,"app", a)
 		logger.LogError(err)
 	}
 }
