@@ -5,14 +5,11 @@ import (
 	"goblog/pkg/route"
 	"goblog/pkg/types"
 	"gorm.io/gorm"
-	"time"
 )
 
 type Article struct {
 	models.BaseModel
 	Title, Body string
-	CreatedAt time.Time
-	UpdatedAt time.Time
 	DeletedAt gorm.DeletedAt
 }
 
