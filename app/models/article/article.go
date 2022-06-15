@@ -1,6 +1,7 @@
 package article
 
 import (
+	"goblog/app/models"
 	"goblog/pkg/route"
 	"goblog/pkg/types"
 	"gorm.io/gorm"
@@ -8,7 +9,7 @@ import (
 )
 
 type Article struct {
-	ID          uint64
+	models.BaseModel
 	Title, Body string
 	CreatedAt time.Time
 	UpdatedAt time.Time
