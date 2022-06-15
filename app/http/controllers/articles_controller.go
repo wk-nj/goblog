@@ -9,7 +9,6 @@ import (
 	"goblog/pkg/route"
 	"goblog/pkg/view"
 	"gorm.io/gorm"
-	"html/template"
 	"net/http"
 	"strconv"
 )
@@ -18,7 +17,8 @@ type ArticlesController struct {
 }
 
 type articleFormData struct {
-	article.Article
+	Title, Body string
+	Article     article.Article
 	URL string
 	Errors map[string]string
 }
@@ -45,7 +45,7 @@ func (*ArticlesController) Show(w http.ResponseWriter, r *http.Request) {
 		}
 	} else {
 		// 4. 读取成功，显示文章
-		view.Render(w,"articles.show", a)
+		view.Render(w, a, "articles.show")
 	}
 }
 
@@ -56,7 +56,7 @@ func (*ArticlesController) Index(w http.ResponseWriter, r *http.Request)  {
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprint(w, "500 服务器内部错误")
 	}else {
-		view.Render(w, "articles.index", articles)
+		view.Render(w, articles, "articles.index")
 	}
 	//tem, err := template.ParseFiles("resources/views/articles/index.gohtml")
 	//err = tem.Execute(w, articles)
@@ -66,21 +66,7 @@ func (*ArticlesController) Index(w http.ResponseWriter, r *http.Request)  {
 }
 
 func (*ArticlesController) Create(w http.ResponseWriter, r *http.Request)  {
-	tmp, err := template.ParseFiles("resources/views/articles/create.gohtml")
-	if err  != nil {
-		logger.LogError(err)
-		return
-	}
-	var formData articleFormData
-	storeUrl := route.Name2URL("articles.store")
-	formData = articleFormData{
-		URL: storeUrl,
-		Errors: nil,
-	}
-	err = tmp.Execute(w, formData)
-	if err!=nil {
-		logger.LogError(err)
-	}
+	view.Render(w, articleFormData{}, "articles.create", "articles._form_field")
 }
 
 func (*ArticlesController) Store(w http.ResponseWriter, r *http.Request)  {
@@ -103,48 +89,43 @@ func (*ArticlesController) Store(w http.ResponseWriter, r *http.Request)  {
 			fmt.Fprint(w, "创建文章失败，请联系管理员")
 		}
 	} else {
-
-		storeURL := route.Name2URL("articles.store")
-
-		data := articleFormData{
-			Article: article.Article{Title: title, Body: body},
-			URL:    storeURL,
+		view.Render(w, articleFormData{
+			Title:  title,
+			Body:   body,
 			Errors: errors,
-		}
-		tmpl, err := template.ParseFiles("resources/views/articles/create.gohtml")
-
-		logger.LogError(err)
-
-		err = tmpl.Execute(w, data)
-		logger.LogError(err)
+		}, "articles.create", "articles._form_field")
 	}
 }
 
-func (*ArticlesController) Edit(w http.ResponseWriter, r *http.Request)  {
-	articleId := route.GetRouteVariable("id", r)
-	art, err :=article.Get(articleId)
+// Edit 文章更新页面
+func (*ArticlesController) Edit(w http.ResponseWriter, r *http.Request) {
+
+	// 1. 获取 URL 参数
+	id := route.GetRouteVariable("id", r)
+
+	// 2. 读取对应的文章数据
+	_article, err := article.Get(id)
+
+	// 3. 如果出现错误
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
+			// 3.1 数据未找到
 			w.WriteHeader(http.StatusNotFound)
-			fmt.Fprint(w, "文章不存在")
-		}else {
+			fmt.Fprint(w, "404 文章未找到")
+		} else {
+			// 3.2 数据库错误
 			logger.LogError(err)
 			w.WriteHeader(http.StatusInternalServerError)
-			fmt.Fprint(w, "服务器错误")
+			fmt.Fprint(w, "500 服务器内部错误")
 		}
-
 	} else {
-		updateUrl := route.Name2URL("articles.update", "id", articleId)
-		fmt.Println(updateUrl)
-
-		data := articleFormData{
-			Article: art,
-			URL: updateUrl,
-			Errors: nil,
-		}
-		tem, err :=template.ParseFiles("resources/views/articles/edit.gohtml")
-		logger.LogError(err)
-		_ = tem.Execute(w, data)
+		// 4. 读取成功，显示编辑文章表单
+		view.Render(w, articleFormData{
+			Title: _article.Title,
+			Body: _article.Body,
+			Article: _article,
+			Errors:  nil,
+		}, "articles.edit", "articles._form_field")
 	}
 }
 
@@ -160,20 +141,16 @@ func (*ArticlesController) Update(w http.ResponseWriter, r *http.Request)  {
 	body := r.PostFormValue("body")
 	vail := request.ArticleRequest{}
 	errors := vail.Validate(title, body)
-	updateUrl := route.Name2URL("articles.update", "id", articleId)
 	art.Title = title
 	art.Body = body
-	data := articleFormData{
-		Article: art,
-		URL: updateUrl,
-		Errors: errors,
-	}
 	if len(errors) > 0 {
-		tmpl, err := template.ParseFiles("resources/views/articles/edit.gohtml")
-		logger.LogError(err)
-
-		err = tmpl.Execute(w, data)
-		logger.LogError(err)
+		// 4.3 表单验证不通过，显示理由
+		view.Render(w, articleFormData{
+			Title:   title,
+			Body:    body,
+			Article: art,
+			Errors:  errors,
+		}, "articles.edit", "articles._form_field")
 	}else {
 		rowsAffected, err := art.Update()
 
