@@ -199,3 +199,28 @@ func (*ArticlesController) Update(w http.ResponseWriter, r *http.Request)  {
 		}
 	}
 }
+
+func (*ArticlesController) Delete(w http.ResponseWriter, r *http.Request)  {
+	articleId := route.GetRouteVariable("id", r)
+	_article, err := article.Get(articleId)
+	if err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		fmt.Fprint(w, "文章不存在")
+		return
+	}
+	rowsAffected, err := _article.Delete()
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprint(w, "error")
+		return
+	}else {
+		if rowsAffected > 0 {
+			//fmt.Fprint(w, "删除成功")
+			indexUrl := route.Name2URL("articles.index")
+			http.Redirect(w,r, indexUrl, http.StatusFound)
+		}else {
+			w.WriteHeader(http.StatusInternalServerError)
+			fmt.Fprint(w, "删除失败")
+		}
+	}
+}

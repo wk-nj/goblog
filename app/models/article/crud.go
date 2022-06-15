@@ -43,3 +43,12 @@ func (article *Article) Update() (rowsAffected int64, err error) {
 
 	return result.RowsAffected, nil
 }
+
+func (artilce *Article) Delete()  (RowsAffected int64,err error){
+	result := model.DB.Delete(&artilce)
+	if err = result.Error; err != nil {
+		logger.LogError(err)
+		return 0, err
+	}
+	return result.RowsAffected, nil
+}

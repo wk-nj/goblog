@@ -3,6 +3,7 @@ package article
 import (
 	"goblog/pkg/route"
 	"goblog/pkg/types"
+	"gorm.io/gorm"
 	"time"
 )
 
@@ -11,6 +12,7 @@ type Article struct {
 	Title, Body string
 	CreatedAt time.Time
 	UpdatedAt time.Time
+	DeletedAt gorm.DeletedAt
 }
 
 // Link 方法用来生成文章链接
