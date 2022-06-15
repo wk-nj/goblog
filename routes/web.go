@@ -11,6 +11,12 @@ func RegisterWebRoutes(r *mux.Router)  {
 	r.NotFoundHandler = http.HandlerFunc(pc.NotFound)
 	r.HandleFunc("/", pc.Home).Methods("GET").Name("home")
 	r.HandleFunc("/about", pc.About).Methods("GET").Name("about")
+
+	// 用户认证
+	auc := new(controllers.AuthController)
+	r.HandleFunc("/auth/register", auc.Register).Methods("GET").Name("auth.register")
+	r.HandleFunc("/auth/do-register", auc.DoRegister).Methods("POST").Name("auth.doregister")
+	// 文章
 	ac := new(controllers.ArticlesController)
 	r.HandleFunc("/articles/{id:[0-9]+}",ac.Show).Methods("GET").Name("articles.show")
 	r.HandleFunc("/articles", ac.Index).Methods("GET").Name("articles.index")

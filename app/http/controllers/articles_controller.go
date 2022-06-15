@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"goblog/app/http/request"
 	"goblog/app/models/article"
-	"goblog/pkg/database"
 	"goblog/pkg/logger"
 	"goblog/pkg/route"
 	"goblog/pkg/view"
@@ -15,15 +14,6 @@ import (
 type ArticlesController struct {
 
 }
-
-type articleFormData struct {
-	Title, Body string
-	Article     article.Article
-	URL string
-	Errors map[string]string
-}
-
-var db = database.DB
 
 func (*ArticlesController) Show(w http.ResponseWriter, r *http.Request) {
 	// 1. 获取 URL 参数
@@ -66,7 +56,7 @@ func (*ArticlesController) Index(w http.ResponseWriter, r *http.Request)  {
 }
 
 func (*ArticlesController) Create(w http.ResponseWriter, r *http.Request)  {
-	view.Render(w, articleFormData{}, "articles.create", "articles._form_field")
+	view.Render(w, view.D{}, "articles.create", "articles._form_field")
 }
 
 func (*ArticlesController) Store(w http.ResponseWriter, r *http.Request)  {
@@ -89,10 +79,10 @@ func (*ArticlesController) Store(w http.ResponseWriter, r *http.Request)  {
 			fmt.Fprint(w, "创建文章失败，请联系管理员")
 		}
 	} else {
-		view.Render(w, articleFormData{
-			Title:  title,
-			Body:   body,
-			Errors: errors,
+		view.Render(w, view.D{
+			"Title":  title,
+			"Body":   body,
+			"Errors": errors,
 		}, "articles.create", "articles._form_field")
 	}
 }
@@ -120,11 +110,11 @@ func (*ArticlesController) Edit(w http.ResponseWriter, r *http.Request) {
 		}
 	} else {
 		// 4. 读取成功，显示编辑文章表单
-		view.Render(w, articleFormData{
-			Title: _article.Title,
-			Body: _article.Body,
-			Article: _article,
-			Errors:  nil,
+		view.Render(w, view.D{
+			"Title": _article.Title,
+			"Body": _article.Body,
+			"Article": _article,
+			"Errors":  make(map[string]string),
 		}, "articles.edit", "articles._form_field")
 	}
 }
@@ -145,11 +135,11 @@ func (*ArticlesController) Update(w http.ResponseWriter, r *http.Request)  {
 	art.Body = body
 	if len(errors) > 0 {
 		// 4.3 表单验证不通过，显示理由
-		view.Render(w, articleFormData{
-			Title:   title,
-			Body:    body,
-			Article: art,
-			Errors:  errors,
+		view.Render(w, view.D{
+			"Title":   title,
+			"Body":    body,
+			"Article": art,
+			"Errors":  errors,
 		}, "articles.edit", "articles._form_field")
 	}else {
 		rowsAffected, err := art.Update()
