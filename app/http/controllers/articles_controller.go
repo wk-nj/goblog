@@ -2,7 +2,7 @@ package controllers
 
 import (
 	"fmt"
-	"goblog/app/http/request"
+	"goblog/app/http/requests"
 	"goblog/app/models/article"
 	"goblog/pkg/logger"
 	"goblog/pkg/route"
@@ -62,7 +62,7 @@ func (*ArticlesController) Create(w http.ResponseWriter, r *http.Request)  {
 func (*ArticlesController) Store(w http.ResponseWriter, r *http.Request)  {
 	title := r.PostFormValue("title")
 	body := r.PostFormValue("body")
-	req := request.ArticleRequest{}
+	req := requests.ArticleRequest{}
 	errors := req.Validate(title, body)
 
 	// 检查是否有错误
@@ -129,7 +129,7 @@ func (*ArticlesController) Update(w http.ResponseWriter, r *http.Request)  {
 	}
 	title := r.PostFormValue("title")
 	body := r.PostFormValue("body")
-	vail := request.ArticleRequest{}
+	vail := requests.ArticleRequest{}
 	errors := vail.Validate(title, body)
 	art.Title = title
 	art.Body = body
