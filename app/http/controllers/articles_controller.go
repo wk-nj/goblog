@@ -6,6 +6,7 @@ import (
 	"goblog/app/models/article"
 	"goblog/pkg/logger"
 	"goblog/pkg/route"
+	"goblog/pkg/session"
 	"goblog/pkg/view"
 	"gorm.io/gorm"
 	"net/http"
@@ -40,6 +41,7 @@ func (*ArticlesController) Show(w http.ResponseWriter, r *http.Request) {
 }
 
 func (*ArticlesController) Index(w http.ResponseWriter, r *http.Request)  {
+	fmt.Println(session.Get("uid"))
 	articles, err := article.GetAll()
 	if err !=nil {
 		logger.LogError(err)
