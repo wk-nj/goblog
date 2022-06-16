@@ -3,6 +3,8 @@ package controllers
 import (
 	"goblog/app/http/requests"
 	"goblog/app/models/user"
+	"goblog/pkg/auth"
+	"goblog/pkg/logger"
 	"goblog/pkg/view"
 	"net/http"
 )
@@ -54,5 +56,20 @@ func (*AuthController) Login(w http.ResponseWriter, r *http.Request) {
 
 // DoLogin 登录
 func (*AuthController) DoLogin(w http.ResponseWriter, r *http.Request) {
-
+	email := r.PostFormValue("email")
+	password := r.PostFormValue("password")
+	//var data = user.User{
+	//	Email: email,
+	//	Password: password,
+	//}
+	//errs := requests.ValidateLoginForm(data)
+	//if len(errs) > 0 {
+	//	view.RenderSimple(w, view.D{"Error":errs["password"]}, "auth.login")
+	//}
+	err := auth.Attempt(email, password)
+	if err != nil {
+		logger.LogError(err)
+		view.RenderSimple(w, view.D{"Email" : email, "Error":err.Error()}, "auth.login")
+	}
+	http.Redirect(w, r, "/", http.StatusFound)
 }
