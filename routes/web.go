@@ -3,6 +3,7 @@ package routes
 import (
 	"github.com/gorilla/mux"
 	"goblog/app/http/controllers"
+	"goblog/app/http/middlewares"
 	"net/http"
 )
 
@@ -16,6 +17,8 @@ func RegisterWebRoutes(r *mux.Router)  {
 	auc := new(controllers.AuthController)
 	r.HandleFunc("/auth/register", auc.Register).Methods("GET").Name("auth.register")
 	r.HandleFunc("/auth/do-register", auc.DoRegister).Methods("POST").Name("auth.doregister")
+	r.HandleFunc("/auth/login", auc.Login).Methods("GET").Name("auth.login")
+	r.HandleFunc("/auth/dologin", auc.DoLogin).Methods("POST").Name("auth.dologin")
 	// 文章
 	ac := new(controllers.ArticlesController)
 	r.HandleFunc("/articles/{id:[0-9]+}",ac.Show).Methods("GET").Name("articles.show")
@@ -30,4 +33,6 @@ func RegisterWebRoutes(r *mux.Router)  {
 	r.PathPrefix("/js/").Handler(http.FileServer(http.Dir("./public")))
 	// 中间件：强制内容类型为 HTML
 	//r.Use(middlewares.ForceHTML)
+	// 开始会话
+	r.Use(middlewares.StartSession)
 }
