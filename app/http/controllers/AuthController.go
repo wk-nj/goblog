@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"goblog/app/http/requests"
 	"goblog/app/models/user"
 	"goblog/pkg/auth"
@@ -36,14 +37,15 @@ func (*AuthController) DoRegister(w http.ResponseWriter, r *http.Request) {
 			"User":   _user,
 		}, "auth.register")
 	} else {
-		// _user.Create()
+		_user.Create()
 
-		// if _user.ID > 0 {
-		//     fmt.Fprint(w, "插入成功，ID 为"+_user.GetStringID())
-		// } else {
-		//     w.WriteHeader(http.StatusInternalServerError)
-		//     fmt.Fprint(w, "注册失败，请联系管理员")
-		// }
+		if _user.ID > 0 {
+			auth.Login(_user)
+			http.Redirect(w, r, "/", http.StatusFound)
+		} else {
+		    w.WriteHeader(http.StatusInternalServerError)
+		    fmt.Fprint(w, "注册失败，请联系管理员")
+		}
 	}
 
 	// 5. 表单不通过 —— 重新显示表单
