@@ -33,6 +33,9 @@ func RegisterWebRoutes(r *mux.Router)  {
 	// 静态资源
 	r.PathPrefix("/css/").Handler(http.FileServer(http.Dir("./public")))
 	r.PathPrefix("/js/").Handler(http.FileServer(http.Dir("./public")))
+	// 用户
+	uc := new(controllers.UserController)
+	r.HandleFunc("/users/{id:[0-9]+}", uc.Show).Methods("GET").Name("users.show")
 	// 中间件：强制内容类型为 HTML
 	//r.Use(middlewares.ForceHTML)
 	// 开始会话
