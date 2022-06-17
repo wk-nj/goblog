@@ -1,26 +1,40 @@
 package requests
 
-import "unicode/utf8"
+import (
+	"goblog/app/models/article"
 
-type ArticleRequest struct {
+	"github.com/thedevsaddam/govalidator"
+)
 
-}
+// ValidateArticleForm 验证表单，返回 errs 长度等于零即通过
+func ValidateArticleForm(data article.Article) map[string][]string {
 
-func (*ArticleRequest) Validate(title, body string) map[string]string {
-	errors := make(map[string]string)
-
-	// 验证标题
-	if title == "" {
-		errors["title"] = "标题不能为空"
-	} else if utf8.RuneCountInString(title) < 3 || utf8.RuneCountInString(title) > 40 {
-		errors["title"] = "标题长度需介于 3-40"
+	// 1. 定制认证规则
+	rules := govalidator.MapData{
+		"title": []string{"required", "min:3", "max:40"},
+		"body":  []string{"required", "min:10"},
 	}
 
-	// 验证内容
-	if body == "" {
-		errors["body"] = "内容不能为空"
-	} else if utf8.RuneCountInString(body) < 10 {
-		errors["body"] = "内容长度需大于或等于 10 个字节"
+	// 2. 定制错误消息
+	messages := govalidator.MapData{
+		"title": []string{
+			"required:标题为必填项",
+			"min:标题长度需大于 3",
+			"max:标题长度需小于 40",
+		},
+		"body": []string{
+			"required:文章内容为必填项",
+			"min:长度需大于 10",
+		},
 	}
-	return errors
+	// 3. 配置初始化
+	opts := govalidator.Options{
+		Data:          &data,
+		Rules:         rules,
+		TagIdentifier: "valid", // 模型中的 Struct tag 标识符
+		Messages:      messages,
+	}
+
+	// 4. 开始验证
+	return govalidator.New(opts).ValidateStruct()
 }

@@ -6,7 +6,6 @@ import (
 	"goblog/app/models/article"
 	"goblog/pkg/logger"
 	"goblog/pkg/route"
-	"goblog/pkg/session"
 	"goblog/pkg/view"
 	"gorm.io/gorm"
 	"net/http"
@@ -21,7 +20,7 @@ func (*ArticlesController) Show(w http.ResponseWriter, r *http.Request) {
 	id := route.GetRouteVariable("id", r)
 	// 2. 读取对应的文章数据
 	a, err := article.Get(id)
-
+	fmt.Printf("%T\n", a.User)
 	// 3. 如果出现错误
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -36,19 +35,18 @@ func (*ArticlesController) Show(w http.ResponseWriter, r *http.Request) {
 		}
 	} else {
 		// 4. 读取成功，显示文章
-		view.Render(w, view.D{"Article" : a}, "articles.show")
+		view.Render(w, view.D{"Article" : a}, "articles.show", "articles._article_meta")
 	}
 }
 
 func (*ArticlesController) Index(w http.ResponseWriter, r *http.Request)  {
-	fmt.Println(session.Get("uid"))
 	articles, err := article.GetAll()
 	if err !=nil {
 		logger.LogError(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprint(w, "500 服务器内部错误")
 	}else {
-		view.Render(w, view.D{"Articles": articles}, "articles.index")
+		view.Render(w, view.D{"Articles": articles}, "articles.index","articles._article_meta")
 	}
 	//tem, err := template.ParseFiles("resources/views/articles/index.gohtml")
 	//err = tem.Execute(w, articles)
@@ -64,15 +62,14 @@ func (*ArticlesController) Create(w http.ResponseWriter, r *http.Request)  {
 func (*ArticlesController) Store(w http.ResponseWriter, r *http.Request)  {
 	title := r.PostFormValue("title")
 	body := r.PostFormValue("body")
-	req := requests.ArticleRequest{}
-	errors := req.Validate(title, body)
-
+	_article := article.Article{
+		Title: title,
+		Body:  body,
+	}
+	errors := requests.ValidateArticleForm(_article)
 	// 检查是否有错误
 	if len(errors) == 0 {
-		_article := article.Article{
-			Title: title,
-			Body:  body,
-		}
+
 		_article.Create()
 		if _article.ID > 0 {
 			fmt.Fprint(w, "插入成功，ID 为"+strconv.FormatUint(_article.ID, 10))
@@ -129,17 +126,14 @@ func (*ArticlesController) Update(w http.ResponseWriter, r *http.Request)  {
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprint(w, "文章不存在")
 	}
-	title := r.PostFormValue("title")
-	body := r.PostFormValue("body")
-	vail := requests.ArticleRequest{}
-	errors := vail.Validate(title, body)
-	art.Title = title
-	art.Body = body
+	art.Title = r.PostFormValue("title")
+	art.Body = r.PostFormValue("body")
+	errors := requests.ValidateArticleForm(art)
 	if len(errors) > 0 {
 		// 4.3 表单验证不通过，显示理由
 		view.Render(w, view.D{
-			"Title":   title,
-			"Body":    body,
+			"Title":   art.Title,
+			"Body":    art.Body,
 			"Article": art,
 			"Errors":  errors,
 		}, "articles.edit", "articles._form_field")

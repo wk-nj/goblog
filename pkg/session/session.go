@@ -1,6 +1,7 @@
 package session
 
 import (
+	"goblog/pkg/config"
 	"goblog/pkg/logger"
 	"net/http"
 
@@ -25,7 +26,7 @@ func StartSession(w http.ResponseWriter, r *http.Request) {
 
 	// Store.Get() 的第二个参数是 Cookie 的名称
 	// gorilla/sessions 支持多会话，本项目我们只使用单一会话即可
-	Session, err = Store.Get(r, "goblog-session")
+	Session, err = Store.Get(r, config.GetString("session.session_name"))
 	Session.Options.MaxAge = 60 * 60 * 24 * 60
 	Session.Options.HttpOnly = true
 	logger.LogError(err)
