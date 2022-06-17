@@ -2,8 +2,8 @@ package controllers
 
 import (
 	"fmt"
-	"goblog/app/http/requests"
 	"goblog/app/models/user"
+	"goblog/app/requests"
 	"goblog/pkg/auth"
 	"goblog/pkg/flash"
 	"goblog/pkg/logger"
